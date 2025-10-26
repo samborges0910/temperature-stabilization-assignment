@@ -37,8 +37,7 @@ temperature between each of the clients.
 After each iteration, each client will display its updated temperature, as well as the updated central temperature, and this process will repeat until the temperature is stabilized between all the processes. 
 
 
-Once the process is stable, the program will terminate, and it will display the final central temperature. add the aditional keys to make the text show exactly how it is in the read me file, where people will 
-read it
+Once the process is stable, the program will terminate, and it will display the final central temperature.
 
 Example of successfull code execution:
 
