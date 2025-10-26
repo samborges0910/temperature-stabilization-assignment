@@ -10,7 +10,9 @@ gcc tcp_server.c utils.c -o server
 
 gcc tcp_client.c utils.c -o client
 
-3. Open one terminal to start with the server temperature: example of input:
+3. Open one terminal to start with the server temperature:
+
+example:
 
 ./server 1000
 
@@ -45,7 +47,7 @@ Example of successfull code execution:
 ![2ss](https://github.com/user-attachments/assets/62a4b4f1-745f-4e74-a970-0caaaf318c2b)
 
 
-#End of Instructions
+# End of Instructions
 
 # Temperature stabilization using inter-process communication
 
