@@ -1,6 +1,6 @@
 # Start of Instructions
 
-This program is a simple temperature-stabilization system that uses using TCP sockets over the network to exchange temperature between a central process and external processes, until the temperature is stable. To run the program, follow the instructions below:
+This program is a simple temperature-stabilization system that uses TCP sockets over the network to exchange temperature between a central process and external processes, until the temperature is stable. To run the program, follow the instructions below:
 
 1. Download the files from the repository (tcp_server.c , tcp_client.c , utils.c , utils.h), and also make sure to run the program in a linux or unix environment
 
@@ -10,13 +10,13 @@ gcc tcp_server.c utils.c -o server
 
 gcc tcp_client.c utils.c -o client
 
-3. Open one terminal to start with the server temperature:
+3. Open one terminal to start with the server temperature. This terminal will be our server and we will insert the intitial temperature here:
 
 example:
 
 ./server 1000
 
-It is important to follow the correct format ./server in order for the program to run
+It is important to follow the correct input format structure in order for the program to run
 
 4. Run the external processes by opening 4 sperate terminals, and start each of them with:
 
@@ -31,7 +31,7 @@ example:
 ./client 4 400
 
 Each terminal will be associated to one of the 4 clients, and will each have their own temperature. Once the clients are running and successfully connect to the server, it will automatically start exchanging 
-temperature between each of the clients. 
+temperature between each of the clients. The server will start exchainging the initial temperature with each of the clients, and the updated client temperature will be sent back to the server, creating an infite loop.
 
 
 After each iteration, each client will display its updated temperature, as well as the updated central temperature, and this process will repeat until the temperature is stabilized between all the processes. 
@@ -42,6 +42,7 @@ Once the process is stable, the program will terminate, and it will display the 
 Example of successfull code execution:
 
 ![1ss](https://github.com/user-attachments/assets/26ae29e8-915c-4650-ab66-4167f6d3af4d)
+
 
 ![2ss](https://github.com/user-attachments/assets/62a4b4f1-745f-4e74-a970-0caaaf318c2b)
 
