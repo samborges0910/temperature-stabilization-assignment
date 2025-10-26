@@ -6,11 +6,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-
 struct msg{
     float T;     // Temperature 
-    int Index;    // Index indifying the process 
+    int Index;    // Index identifying the process (or control signals)
 }; 
 
-struct msg prepare_message(int i_Index, float i_Temperature); 
+struct msg prepare_message(int i_Index, float i_Temperature);
 
