@@ -9,26 +9,13 @@
 #include <math.h>
 #include "utils.h"
 
-#define numExternals 4
-#define EPSILON 0.001f  // Stabilization threshold
+#define numExternals 4 // Number of external processes
+#define EPSILON 0.001f // Threshold for stabilization
 
-int* establishConnectionsFromExternalProcesses()
-{
+int* establishConnectionsFromExternalProcesses() {
 
-    // This socket is used by the server (i.e, Central process) to listen for
-    // connections fromt the External process.
     int socket_desc;
-
-    // Array containing the file descriptor of each server-client socket.
-    // There will be 4 client sockets, one for each external process.
-    //
-    // Note that this array is declared as static so the function can return it
-    // to the caller function. A static int variable remains in memory while
-    // the program is running. A normal local variable is destroyed when a
-    // function call where the variable was declared returns. We want this
-    // array to persist.
     static int client_socket[numExternals];
-
     unsigned int client_size;
     struct sockaddr_in server_addr, client_addr;
 
@@ -37,7 +24,7 @@ int* establishConnectionsFromExternalProcesses()
 
     if (socket_desc < 0) {
         printf("Error while creating socket\n");
-        exit(1); // exit(1) terminates the program in case an error is found
+        exit(0);
     }
     printf("Socket created successfully\n");
 
@@ -48,18 +35,16 @@ int* establishConnectionsFromExternalProcesses()
 
 
     // Bind to the set port and IP
-    if (bind(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr))<0) {
         printf("Couldn't bind to the port\n");
-        close(socket_desc);
-        exit(1);
+        exit(0);
     }
     printf("Done with binding\n");
 
     // Listen for clients
     if (listen(socket_desc, numExternals) < 0) {
         printf("Error while listening\n");
-        close(socket_desc);
-        exit(1); // Kills server for better handling
+        exit(0);
     }
     printf("\n\nListening for incoming connections...\n\n");
 
@@ -70,6 +55,7 @@ int* establishConnectionsFromExternalProcesses()
     //========================================================
 
     int externalCount = 0;
+
     client_size = sizeof(client_addr); // Lets the accept() function know the size of client to avoid overwriting code
 
     while (externalCount < numExternals) {
@@ -79,13 +65,13 @@ int* establishConnectionsFromExternalProcesses()
 
         if (client_socket[externalCount] < 0) {
             printf("Can't accept\n");
-            exit(1);
+            exit(0);
         }
-
         printf("One external process connected at IP: %s and port: %i\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         externalCount++;
     }
+
     printf("--------------------------------------------------------------------------\n");
     printf("All four external processes are now connected\n");
     printf("--------------------------------------------------------------------------\n\n");
@@ -93,29 +79,14 @@ int* establishConnectionsFromExternalProcesses()
     return client_socket; // Pointer to the array of file descriptors of client sockets
 }
 
-int main(int argc, char *argv[]) //for receiving command-line arguments
-{
+int main(int argc, char *argv[]) {// Changed parameters to accept the server input
+
     int socket_desc;
-    // unsigned int client_size;
-    // struct  sockaddr_in server_addr, client_addr;
-
-    if (argc != 2) { // Input should respect format ./server <temperature>
-        fprintf(stderr, "Usage: %s <initial central temperature>\n", argv[0]);
-        return 1;
-    }
-
-    // Read initial central temperature from command line
     float centralTemp = atof(argv[1]); // Adding centralTemp as the central temperature
     printf("Initial central temperature: %.3f\n", centralTemp);
-
-    // Messages received from clients (externals).
     struct msg messageFromClient;
-
-    // Establish client connections and return
-    // an array of file descriptors of client sockets.
     int* client_socket = establishConnectionsFromExternalProcesses();
-
-    bool stable = false;
+    bool stable = false; // Checks stability
     float previousTemperatures[numExternals] = {0}; // Stores clients from last iteration
 
     while (!stable) {
@@ -125,10 +96,10 @@ int main(int argc, char *argv[]) //for receiving command-line arguments
 
         // Receive messages from the 4 external processes
         for (int i = 0; i < numExternals; i++) {
-            ssize_t r = recv(client_socket[i], (void *)&messageFromClient, sizeof(messageFromClient), 0); //
-            if (r <= 0) {
-                printf("Couldn't receive from client %d (recv returned %zd)\n", i + 1, r);
-                for (int j = 0; j < numExternals; j++) close(client_socket[j]);
+
+            // Receive client's message
+            if (recv(client_socket[i], (void *)&messageFromClient, sizeof(messageFromClient), 0) < 0){
+                printf("Couldn't receive\n");
                 return -1;
             }
 
@@ -137,11 +108,11 @@ int main(int argc, char *argv[]) //for receiving command-line arguments
         }
 
         // Modify temperature
-        float sumClients = 0.0f; // Sum of the client temperatures
+        float sum_clients = 0.0f; // Sum of the client temperatures
         for (int i = 0; i < numExternals; i++)
-            sumClients += temperature[i];
+            sum_clients += temperature[i];
 
-        centralTemp = (2.0f * centralTemp + sumClients) / 6.0f; // Used to find the central temperature
+        centralTemp = (2.0f * centralTemp + sum_clients) / 6.0f; // Used to find the central temperature
         printf("Updated Central Temperature: %.5f\n", centralTemp);
 
         // Construct message with updated temperature
@@ -168,13 +139,11 @@ int main(int argc, char *argv[]) //for receiving command-line arguments
             }
             previousTemperatures[i] = temperature[i];  // Update previous temperatures
         }
-
-        usleep(100000); // Gives the process some time to complete the iteration before going to the next one, used if input with bigger values (100 miliseconds)
     }
-
     printf("\nSystem has been stabilized\n");
     printf("Final Central Temperature: %.5f\n", centralTemp);
 
+    // Constructing done message
     struct msg done_msg;
     done_msg.T = centralTemp;
     done_msg.Index = -1;
@@ -183,7 +152,7 @@ int main(int argc, char *argv[]) //for receiving command-line arguments
         send(client_socket[i], (const void *)&done_msg, sizeof(done_msg), 0); // Tells the client that the server is done, temperature is stabilized
     }
 
-    // Close sockets
+    // Close all sockets
     for (int i = 0; i < numExternals; i++)
         close(client_socket[i]);
 
